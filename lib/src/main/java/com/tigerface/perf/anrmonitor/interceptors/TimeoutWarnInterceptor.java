@@ -2,7 +2,7 @@ package com.tigerface.perf.anrmonitor.interceptors;
 
 import android.util.Log;
 
-import com.tigerface.perf.anrmonitor.AnrMonitor;
+import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.MessageSaver;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.entity.MessageType;
@@ -11,7 +11,7 @@ public class TimeoutWarnInterceptor extends Interceptor {
     private static final String TAG = "ANR_" + TimeoutWarnInterceptor.class.getSimpleName();
 
     @Override
-    public boolean accept(BoxMessage lastMessage, BoxMessage currentMessage, AnrMonitor.Config config) {
+    public boolean accept(BoxMessage lastMessage, BoxMessage currentMessage, AnrConfig config) {
         if (currentMessage.getType() != MessageType.GAP
                 && currentMessage.getWallTime() > config.getWarnTime()) {
             currentMessage.setType(MessageType.WARN);
@@ -21,7 +21,7 @@ public class TimeoutWarnInterceptor extends Interceptor {
     }
 
     @Override
-    public boolean deal(BoxMessage message, AnrMonitor.Config config, MessageSaver messageSaver) {
+    public boolean deal(BoxMessage message, AnrConfig config, MessageSaver messageSaver) {
         if (config.getCustomListener() != null) {
             config.getCustomListener().onTimeOutWarn(message);
         }

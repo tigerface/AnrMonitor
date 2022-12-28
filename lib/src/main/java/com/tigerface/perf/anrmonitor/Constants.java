@@ -1,6 +1,6 @@
 package com.tigerface.perf.anrmonitor;
 
-public interface AnrConfigs {
+public interface Constants {
     long SOLID_INTERVAL = 1000;//定时发送哨兵消息，以查看系统分发情况
     long MAX_WARN_MILLS = 3000;//ANR超时时间
     long CHECK_DURATION_MILLS = 3000;//采样间隔

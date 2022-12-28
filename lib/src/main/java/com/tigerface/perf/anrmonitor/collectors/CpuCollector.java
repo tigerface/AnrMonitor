@@ -9,10 +9,11 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 public class CpuCollector implements Collector {
     private static final int BUFFER_SIZE = 1024;
-    private static final String TAG = CpuCollector.class.getSimpleName();
+    private static final String TAG = "ANR_" + CpuCollector.class.getSimpleName();
 
     private int mPid = 0;
     private long mUserLast = 0;
@@ -24,6 +25,7 @@ public class CpuCollector implements Collector {
 
     @Override
     public String collect(Context context, BoxMessage message) {
+        Log.i(TAG, "collect cpu info,msgId:" + message.getId());
         reset();
         BufferedReader cpuReader = null;
         BufferedReader pidReader = null;
@@ -47,7 +49,6 @@ public class CpuCollector implements Collector {
             }
 
             result = parse(cpuRate, pidCpuRate);
-
         } catch (Throwable throwable) {
             Log.e(TAG, "doSample: ", throwable);
         } finally {
@@ -62,6 +63,10 @@ public class CpuCollector implements Collector {
                 Log.e(TAG, "doSample: ", exception);
             }
         }
+        if (message.getCpuInfoList() == null) {
+            message.setCpuInfoList(new ArrayList<>());
+        }
+        message.getCpuInfoList().add(result);
         return result;
     }
 

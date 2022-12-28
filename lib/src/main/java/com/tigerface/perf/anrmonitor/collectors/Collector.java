@@ -4,7 +4,9 @@ import android.content.Context;
 
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 
+/**
+ * @author tiger
+ */
 public interface Collector {
-    public String collect(Context context, BoxMessage message);
-
+    String collect(Context context, BoxMessage message);
 }

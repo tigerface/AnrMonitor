@@ -66,8 +66,8 @@ public class FileUtil {
     }
 
     public boolean existSampleFile() {
-        //20秒内无Sample日志
-        return fileCache.existSampleFile(20 * 1000 * 1000);
+        //20秒内无Sample日志，需要重新获取
+        return fileCache.existSampleFile(20 * 1000);
     }
 
     public static boolean deleteFile(File file) {
@@ -154,7 +154,6 @@ public class FileUtil {
                 FileUtil.closeStream(bs);
             }
             currentSize = diskCacheDir.listFiles() == null ? 0 : diskCacheDir.listFiles().length;
-            Log.d(TAG, "removeLastFile currentSize:" + currentSize + ",maxSize: " + maxSize);
             if (currentSize > maxSize) {
                 removeLastFile();
             }
@@ -221,8 +220,9 @@ public class FileUtil {
             });
             if (files.length > 0) {
                 File lastFile = files[0];
-                Log.d(TAG, "currentTimeMillis: " + System.currentTimeMillis() + " ,lastMode " + lastFile.lastModified() + " " + lastFile.getName());
-                return lastFile.getName().contains(SUFFIX) && (System.currentTimeMillis() - lastFile.lastModified() < maxDuration);
+                long currentTime = System.currentTimeMillis();
+                Log.d(TAG, "currentTimeMillis: " + currentTime + " ,lastMode " + lastFile.lastModified() + ", " + (currentTime - lastFile.lastModified()) + ", name " + lastFile.getName());
+                return lastFile.getName().contains(SUFFIX) && (currentTime - lastFile.lastModified() < maxDuration);
             }
             return false;
         }

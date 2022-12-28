@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - Timeline</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600'>
+  <link rel="stylesheet" href="./style.css">
+
+</head>
+
+<body>
+  <div class="timeline" id="timeline">
+
+    <div class="entry">
+      <div class="title">
+        <h3>messgeId</h3>
+        <p>startWallTime</p>
+      </div>
+      <div class="body">
+        <!-- <input id="contained" name="openfile" type="file" /> -->
+        <form name="form" method="post" action="javascript:;">
+          <input type="file" name="picpath" id="contained" style="display: none;" multiple="multiple" />
+          <input type="button" value="Choose ANR log " onclick="document.form.contained.click()">
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    var contained = document.querySelector("#contained");
+    var fileReader = new FileReader();
+    var rawdata;
+    fileReader.onload = function (e) {
+      rawdata = e.target.result;
+      reDraw();
+    }
+    function handleUpload(e) {
+      var file = e.target.files[0];
+      fileReader.readAsText(file);
+    }
+    contained.addEventListener("change", handleUpload);
+
+    function reDraw() {
+      var jsonArray = eval('(' + rawdata + ')');
+      console.log(jsonArray.length)
+      var timeLine = document.getElementById("timeline");
+      for (var i = 0; i < jsonArray.length; i++) {
+        //
+        var item = jsonArray[i];
+        //entry
+        var entryDiv = document.createElement("div");
+        entryDiv.className = "entry";
+        timeLine.appendChild(entryDiv);
+
+        //title
+        var titleDiv = document.createElement("div");
+        titleDiv.className = "title";
+        entryDiv.appendChild(titleDiv);
+
+        //h3
+        var titleH3Div = document.createElement("h3");
+        titleH3Div.innerHTML = "msgId:" + item.id;
+        //ANR 
+        if (item.type == 5) {
+          titleH3Div.className = "anr";
+        }
+
+        if (item.type == 4) {
+          titleH3Div.className = "longtime";
+        }
+
+        if (item.type == 3) {
+          titleH3Div.className = "jank";
+        }
+
+        titleDiv.appendChild(titleH3Div);
+        //p
+        var titleP = document.createElement("p");
+        titleP.innerHTML = "startWallTime:" + item.startWallTime;
+        titleDiv.appendChild(titleP);
+
+        //body
+        var bodyDiv = document.createElement("div");
+        bodyDiv.className = "body";
+        entryDiv.appendChild(bodyDiv);
+
+        //p
+        var bodyP = document.createElement("p");
+        var result = '';
+        result += "type:" + getType(item.type) + "<br />";
+        result += "wallTime:" + item.wallTime + "<br />";
+        result += "cpuTime:" + item.cpuTime + "<br />";
+        result += "handlerName:" + item.handlerName + "<br />";
+        result += "callbackName:" + item.callbackName + "<br />";
+        result += "handlerAddress:" + item.handlerAddress + "<br />";
+
+        result += "when:" + item.when + "<br />";
+        if (item.msgList != null) {
+          result += "msgList:" + item.msgList.length + "<br />";
+        }
+
+        if (item.cpuInfo != null || item.memoryInfoList != null || item.stackTraceList != null) {
+          result += "systemInfos:======================================= <br />"
+        }
+
+        if (item.cpuInfo != null) {
+          result += "cpuInfoList:<br />" + item.cpuInfoList + "<br />";
+        }
+
+        if (item.memoryInfoList != null) {
+          result += "memoryInfoList:<br />" + item.memoryInfoList + "<br />";
+        }
+
+        if (item.stackTraceList != null) {
+          result += "stackTraceList:<br />" + item.stackTraceList + "<br />";
+        }
+        result += "======================================="
+
+        bodyP.innerHTML = result;
+        //bodyP.innerHTML = JSON.stringify(item);
+        bodyDiv.appendChild(bodyP);
+      }
+    }
+
+    function getType(type) {
+      if (type == 0) {
+        return 'NORMAL';
+      }
+      if (type == 1) {
+        return 'AMS';
+      }
+      if (type == 2) {
+        return 'GAP';
+      }
+      if (type == 3) {
+        return 'JANK';
+      }
+      if (type == 4) {
+        return 'WARN';
+      }
+      if (type == 5) {
+        return 'ANR';
+      }
+      if (type == 6) {
+        return 'PENDING MESSAGE';
+      }
+    }
+  </script>
+
+
+
+  <!-- partial -->
+
+</body>
+
+</html>

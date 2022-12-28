@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.tigerface.perf.anrmonitor.collectors.Collector;
 import com.tigerface.perf.anrmonitor.collectors.PendingMessageCollector;
+import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.entity.MessageType;
 import com.tigerface.perf.anrmonitor.interceptors.AmsInterceptor;
@@ -27,7 +28,6 @@ public class Dispatcher {
     private static final String TAG = "ANR_DISPATCHER";
     private static volatile Dispatcher mInstance;
     private final AtomicBoolean mIsSampling;
-    //    private final AtomicBoolean mIsANRSampling;
     private Gson gson = new Gson();
     private MessageSaver messageSaver = new MessageSaver();
 
@@ -35,7 +35,6 @@ public class Dispatcher {
 
     private Dispatcher() {
         mIsSampling = new AtomicBoolean(false);
-//        mIsANRSampling = new AtomicBoolean(false);
 
         //优先级从前到后
         mInterceptors = new ArrayList<>();
@@ -63,7 +62,7 @@ public class Dispatcher {
      * @param config
      * @return true，该消息是否已经被处理
      */
-    public boolean dispatch(BoxMessage lastMessage, BoxMessage currentMessage, AnrMonitor.Config config) {
+    public boolean dispatch(BoxMessage lastMessage, BoxMessage currentMessage, AnrConfig config) {
         if (config == null) {
             Log.w(TAG, "not set config !");
             return false;
@@ -80,28 +79,25 @@ public class Dispatcher {
         return false;
     }
 
-    public void collectSampleData(Context context, BoxMessage message, AnrMonitor.Config configs) {
+    public void collectSampleData(Context context) {
         if (mIsSampling.get()) {
             Log.i(TAG, "sampling, ignore.");
             return;
         }
+        BoxMessage message = AnrMonitor.get().getCurrentMessage();
+        AnrConfig configs = AnrMonitor.get().getConfig();
         List<Collector> collectors = configs.getCollectors();
         Log.i(TAG, "block happens, begin collect system information.");
         mIsSampling.set(true);
-        StringBuilder stringBuilder = new StringBuilder();
         CountDownLatch latch = new CountDownLatch(collectors.size());
         for (Collector collector : collectors) {
             AppExecutors.getInstance().networkIO().execute(() -> {
-                String result = collector.collect(context, message);
-                stringBuilder.append("==============================================================================");
-                stringBuilder.append(result);
-                Log.i(TAG, "sample result:" + result);
+                collector.collect(context, message);
                 latch.countDown();
             });
         }
         try {
             latch.await();
-            FileUtil.getInstance(context).saveSampleData(stringBuilder.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -110,15 +106,17 @@ public class Dispatcher {
         Log.i(TAG, "collect sample system information end.");
     }
 
-    public void collectANRData(Context context, BoxMessage message, AnrMonitor.Config configs) {
-        reCollectSampleData(context, message, configs);
+    public void collectANRData(Context context) {
+        BoxMessage message = AnrMonitor.get().getCurrentMessage();
+        AnrConfig configs = AnrMonitor.get().getConfig();
+        collectSampleData(context);
         Log.i(TAG, "anr happens, begin collect system information.");
         CountDownLatch latch = new CountDownLatch(1);
         CopyOnWriteArrayList list = new CopyOnWriteArrayList();
         list.addAll(messageSaver.getAllMessage());
         if (!list.contains(message)) {
             message.setType(MessageType.ANR);
-            Log.e(TAG, "ANR add current " + message.getId());
+            Log.e(TAG, "ANR add current message:" + message.getId());
             list.add(message);
         }
 
@@ -147,11 +145,11 @@ public class Dispatcher {
      * @param message
      * @param configs
      */
-    private void reCollectSampleData(Context context, BoxMessage message, AnrMonitor.Config configs) {
-        boolean existSampleFile = FileUtil.getInstance(context).existSampleFile();
-        if (!existSampleFile) {
-            Log.i(TAG, "recollect anr system information");
-            collectSampleData(context, message, configs);
-        }
-    }
+//    private void reCollectSampleData(Context context, BoxMessage message, AnrConfig configs) {
+//        boolean existSampleFile = FileUtil.getInstance(context).existSampleFile();
+//        if (!existSampleFile) {
+//            Log.i(TAG, "recollect anr system information");
+//            collectSampleData(context, message, configs);
+//        }
+//    }
 }

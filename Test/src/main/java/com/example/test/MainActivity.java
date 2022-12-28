@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -73,63 +72,41 @@ public class MainActivity extends Activity {
 //                consumeCpu();
 //            }
 //        },3*5000);
-//        findViewById(R.id.tv_test_thread_time).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                testThreadTime();
-//            }
-//        });
+
         anrTestBroadcast = AnrTestBroadcast.register(this);
         jankView = findViewById(R.id.jankView);
         findViewById(R.id.tvTestJank).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                mainHandler.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        //12s
-//
-//                        mainHandler.postDelayed(this,2000);
-//                    }
-//                },500);
                 jankView.setJank(true);
             }
         });
-        findViewById(R.id.tvTestAnr1).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.singleLongTimeTask).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //发送消息的目的是提前让消息队列处理严重耗时任务，导致广播不能及时被接收处理
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        //12s
-                        SystemClock.sleep(12000);
-                    }
+                mainHandler.post(() -> {
+                    SystemClock.sleep(12000);
                 });
                 AnrTestBroadcast.sentBroadcast(MainActivity.this);
             }
         });
-        findViewById(R.id.tvTestAnr2).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.multiLongTimeTask).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //发送多个不是非常严重耗时消息，模拟消息队列繁忙
                 for (int i = 25; i > 0; i--) {
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            //500ms
-                            SystemClock.sleep(500);
-                        }
+                    mainHandler.post(() -> {
+                        SystemClock.sleep(500);
                     });
                 }
                 AnrTestBroadcast.sentBroadcast(MainActivity.this);
             }
         });
-        findViewById(R.id.tvTestAnr3).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.otherProcessAnr).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, AnrTestActivity.class);
-
                 startActivity(intent);
             }
         });
@@ -160,49 +137,4 @@ public class MainActivity extends Activity {
 
     Object object = new Object();
 
-    private void testThreadTime() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                long time1 = SystemClock.currentThreadTimeMillis();
-                int i = 0;
-                while (i < 1000000000) {
-                    i++;
-                }
-                long time2 = SystemClock.currentThreadTimeMillis();
-                Log.d(TAG, "thread2 time1 : " + time1 + "  time2 : " + time2 + " dealt : " + (time2 - time1));
-            }
-        }, "thread2").start();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                long time1 = SystemClock.currentThreadTimeMillis();
-                Log.d(TAG, "thread1 time1 : start " + time1);
-                try {
-                    synchronized (object) {
-                        Thread.sleep(3000);
-                        SystemClock.sleep(3000);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                long time2 = SystemClock.currentThreadTimeMillis();
-                Log.d(TAG, "thread1 time1 : " + time1 + "  time2 : " + time2 + " dealt : " + (time2 - time1));
-            }
-        }, "thread1").start();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                long time1 = SystemClock.currentThreadTimeMillis();
-                Log.d(TAG, "thread3 time1 : start " + time1);
-                synchronized (object) {
-                    Log.d(TAG, "get object");
-                }
-                long time2 = SystemClock.currentThreadTimeMillis();
-                Log.d(TAG, "thread3 time1 : " + time1 + "  time2 : " + time2 + " dealt : " + (time2 - time1));
-            }
-        }, "thread3").start();
-    }
 }

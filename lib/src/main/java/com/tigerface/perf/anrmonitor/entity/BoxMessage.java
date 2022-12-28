@@ -2,6 +2,7 @@ package com.tigerface.perf.anrmonitor.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 聚合消息
@@ -16,12 +17,17 @@ public class BoxMessage implements Serializable {
     private long endCpuTime;//
     private long cpuTime;
     private String when;
-    private ArrayList<BoxMessage> msgList;
+    private List<BoxMessage> msgList;
 
     private String callbackName;
     private int messageWhat;
     private String handlerName;
     private String handlerAddress;
+
+    //System
+    private List<String> cpuInfoList;
+    private List<String> memoryInfoList;
+    private List<String> stackTraceList;
 
 
     public BoxMessage() {
@@ -84,11 +90,11 @@ public class BoxMessage implements Serializable {
         this.cpuTime = cpuTime;
     }
 
-    public ArrayList<BoxMessage> getMsgList() {
+    public List<BoxMessage> getMsgList() {
         return msgList;
     }
 
-    public void setMsgList(ArrayList<BoxMessage> msgList) {
+    public void setMsgList(List<BoxMessage> msgList) {
         this.msgList = msgList;
     }
 
@@ -138,6 +144,30 @@ public class BoxMessage implements Serializable {
 
     public void setWhen(String when) {
         this.when = when;
+    }
+
+    public List<String> getCpuInfoList() {
+        return cpuInfoList;
+    }
+
+    public void setCpuInfoList(List<String> cpuInfoList) {
+        this.cpuInfoList = cpuInfoList;
+    }
+
+    public List<String> getMemoryInfoList() {
+        return memoryInfoList;
+    }
+
+    public void setMemoryInfoList(List<String> memoryInfoList) {
+        this.memoryInfoList = memoryInfoList;
+    }
+
+    public List<String> getStackTraceList() {
+        return stackTraceList;
+    }
+
+    public void setStackTraceList(List<String> stackTraceList) {
+        this.stackTraceList = stackTraceList;
     }
 
     @Override

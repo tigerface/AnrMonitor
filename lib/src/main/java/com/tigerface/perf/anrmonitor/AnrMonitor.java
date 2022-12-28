@@ -9,37 +9,66 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.util.Printer;
 
-import com.tigerface.perf.anrmonitor.collectors.Collector;
-import com.tigerface.perf.anrmonitor.collectors.CpuCollector;
-import com.tigerface.perf.anrmonitor.collectors.MemoryCollector;
-import com.tigerface.perf.anrmonitor.collectors.StackTraceCollector;
+import com.tigerface.perf.anrmonitor.config.AnrConfig;
+import com.tigerface.perf.anrmonitor.config.DefaultAnrConfig;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.utils.BoxMessageUtils;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class AnrMonitor implements Printer, ISystemAnrObserver {
     private static final String TAG = "ANR_MONITOR";
-    private static AtomicLong MESSAGE_ID_CREATOR = new AtomicLong();
-    private final Context mContext;
+    private static AnrMonitor sInstance;
+    private static final AtomicLong MESSAGE_ID_CREATOR = new AtomicLong();
+    private Context mContext;
     private final AtomicBoolean mSwitch;
     private BoxMessage mCurrentMessage;
-    private Config mConfig;
+    private AnrConfig mConfig = new DefaultAnrConfig();
+    //采样线程
     private HandlerThread mSampleThread;
-    private final Handler mMainHandler;
-    private Handler mCheckHandler;
-    private int mCheckCount = 0;
+    private Handler mSampleHandler;
+
+    //Checktime线程
+    private HandlerThread mCheckTimeThread;
+    private Handler mCheckTimeHandler;
+
     private boolean mInit = false;
 
-    private AnrMonitor(Context context, Config config) {
+    private AnrMonitor() {
         SystemAnrMonitor.init(AnrMonitor.this);
-        this.mContext = context;
-        this.mConfig = config;
         this.mSwitch = new AtomicBoolean(false);
-        this.mMainHandler = new Handler(Looper.getMainLooper());
+    }
+
+    public static AnrMonitor install(Context context, AnrConfig config) {
+        AnrMonitor anrMonitor = get();
+        if (context == null) {
+            throw new RuntimeException("AnrMonitor not set Context");
+        }
+        anrMonitor.setContext(context.getApplicationContext());
+        anrMonitor.setConfig(config);
+        return anrMonitor;
+    }
+
+    private void setContext(Context context) {
+        this.mContext = context;
+    }
+
+    private void setConfig(AnrConfig config) {
+        if (config != null) {
+            this.mConfig = config;
+        }
+    }
+
+    public static AnrMonitor get() {
+        if (sInstance == null) {
+            synchronized (AnrMonitor.class) {
+                if (sInstance == null) {
+                    sInstance = new AnrMonitor();
+                }
+            }
+        }
+        return sInstance;
     }
 
     public void start() {
@@ -50,27 +79,31 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
         //TODO adapter
         Looper.getMainLooper().setMessageLogging(this);
         startSampleThread();
-        sendSolidMessage();
+        //TODO
+        sendCheckTimeMessage();
     }
 
     /**
      * 发送哨兵消息
      * 哨兵处理的时间差值越大说明调度能力越差，只发送20秒哨兵消息消息。
      */
-    private void sendSolidMessage() {
-        Runnable checkThreadRunnable = new Runnable() {
+    private void sendCheckTimeMessage() {
+        if (mCheckTimeThread != null) {
+            mCheckTimeThread.quit();
+        }
+        mCheckTimeThread = new HandlerThread("CheckTimeThread");
+        mCheckTimeThread.start();
+        if (mCheckTimeHandler != null) {
+            mCheckTimeHandler.removeCallbacksAndMessages(null);
+        }
+        mCheckTimeHandler = new Handler(mCheckTimeThread.getLooper()) {
             @Override
-            public void run() {
-                long currentTime = SystemClock.uptimeMillis();
-                if (mCheckCount >= 20) {//只统计初始化的前20秒的数据
-                    return;
-                }
-                mCheckCount++;
-                mMainHandler.postAtTime(this, "solid", currentTime + mConfig.getSolidTime());
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+
             }
         };
-        mMainHandler.removeCallbacksAndMessages(null);
-        mMainHandler.post(checkThreadRunnable);
+//        mCheckTimeHandler.sendMessageDelayed()
     }
 
     /**
@@ -82,16 +115,16 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
         }
         mSampleThread = new HandlerThread("SampleThread");
         mSampleThread.start();
-        if (mCheckHandler != null) {
-            mCheckHandler.removeCallbacksAndMessages(null);
+        if (mSampleHandler != null) {
+            mSampleHandler.removeCallbacksAndMessages(null);
         }
-        mCheckHandler = new Handler(mSampleThread.getLooper()) {
+        mSampleHandler = new Handler(mSampleThread.getLooper()) {
             @Override
             public void handleMessage(Message msg) {
                 super.handleMessage(msg);
-                //Collect block info
-                Dispatcher.getInstance().collectSampleData(mContext, mCurrentMessage, mConfig);
-                mCheckHandler.sendMessageDelayed(Message.obtain(), mConfig.getCheckTime());
+                //collect current system info
+                Dispatcher.getInstance().collectSampleData(mContext);
+                mSampleHandler.sendMessageDelayed(Message.obtain(), mConfig.getCheckTimeMills());
             }
         };
     }
@@ -101,7 +134,8 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
         if (!mInit) {
             return;
         }
-        if (x.contains("<<<<< Finished to") && !mSwitch.get()) {//忽略第一次执行拿到的是处理完成消息
+        //忽略第一次执行拿到的是处理完成消息
+        if (x.contains("<<<<< Finished to") && !mSwitch.get()) {
             return;
         }
         if (!mSwitch.get()) {
@@ -142,19 +176,18 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
     //2个消息间隔，超过50ms
     private boolean exceedMaxGap(BoxMessage lastMessage, BoxMessage currentMessage) {
         if (lastMessage != null && currentMessage != null) {
-            return currentMessage.getStartWallTime() - lastMessage.getEndWallTime() > mConfig.getMaxGapTime();
+            return currentMessage.getStartWallTime() - lastMessage.getEndWallTime() > mConfig.getMaxGapMills();
         }
         return false;
     }
 
     private void startTimeoutCheck() {
-        mCheckHandler.removeCallbacksAndMessages(null);
-        mCheckHandler.sendMessageDelayed(Message.obtain(), mConfig.getCheckTime());
+        mSampleHandler.removeCallbacksAndMessages(null);
+        mSampleHandler.sendMessageDelayed(Message.obtain(), mConfig.getCheckTimeMills());
     }
 
-
     private void msgEnd() {
-        mCheckHandler.removeCallbacksAndMessages(null);
+        mSampleHandler.removeCallbacksAndMessages(null);
         updateEndMessage();
         Dispatcher.getInstance().dispatch(null, mCurrentMessage, mConfig);
     }
@@ -169,80 +202,37 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
         mCurrentMessage.setCpuTime(endCpuTime - mCurrentMessage.getStartCpuTime());
     }
 
+    public BoxMessage getCurrentMessage() {
+        return mCurrentMessage;
+    }
+
+    public AnrConfig getConfig() {
+        return mConfig;
+    }
+
+    @Override
+    public void onSystemAnr() {
+        Log.e(TAG, "onSystemAnr happen");
+        Dispatcher.getInstance().collectANRData(mContext);
+        if (mConfig.getCustomListener() != null) {
+            mConfig.getCustomListener().onTimeOutWarn(mCurrentMessage);
+        }
+    }
+
     public void stop() {
         mInit = false;
         mCurrentMessage = null;
         if (mSampleThread != null) {
             mSampleThread.quit();
         }
-        if (mCheckHandler != null) {
-            mCheckHandler.removeCallbacks(null);
+        if (mSampleHandler != null) {
+            mSampleHandler.removeCallbacks(null);
         }
-    }
-
-    @Override
-    public void onSystemAnr() {
-        Log.e(TAG, "onSystemAnr happen");
-        Dispatcher.getInstance().collectANRData(mContext, mCurrentMessage, mConfig);
-        if (mConfig.getCustomListener() != null) {
-            mConfig.getCustomListener().onTimeOutWarn(mCurrentMessage);
+        if (mCheckTimeThread != null) {
+            mCheckTimeThread.quit();
         }
-    }
-
-    public static class Config {
-        private final Context mContext;
-        private ICustomListener iCustomListener;
-        private final List<Collector> collectors = Arrays.asList(
-                new CpuCollector(),
-                new MemoryCollector(),
-                new StackTraceCollector());
-
-        public Config(Context context) {
-            this.mContext = context;
-        }
-
-        public void setICustomListener(ICustomListener iCustomListener) {
-            this.iCustomListener = iCustomListener;
-        }
-
-        public ICustomListener getCustomListener() {
-            return iCustomListener;
-        }
-
-        public AnrMonitor build() {
-            if (mContext == null) {
-                throw new RuntimeException("not set Appllication ");
-            }
-            AnrMonitor anrMonitor = new AnrMonitor(mContext, this);
-            return anrMonitor;
-        }
-
-        public long getMaxGapTime() {
-            return AnrConfigs.MAX_GAP_MILLS;
-        }
-
-        public int getJankFrames() {
-            return AnrConfigs.MAX_JANK_FRAMES;
-        }
-
-        public long getWarnTime() {
-            return AnrConfigs.MAX_WARN_MILLS;
-        }
-
-        public int getMaxMessageDuration() {
-            return AnrConfigs.MAX_MESSAGES_DURATION;
-        }
-
-        public long getCheckTime() {
-            return AnrConfigs.CHECK_DURATION_MILLS;
-        }
-
-        public long getSolidTime() {
-            return AnrConfigs.SOLID_INTERVAL;
-        }
-
-        public List<Collector> getCollectors() {
-            return collectors;
+        if (mCheckTimeHandler != null) {
+            mCheckTimeHandler.removeCallbacks(null);
         }
     }
 

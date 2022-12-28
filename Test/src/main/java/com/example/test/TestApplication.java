@@ -6,7 +6,9 @@ import android.content.Context;
 import android.os.Process;
 import android.util.Log;
 
+import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.AnrMonitor;
+import com.tigerface.perf.anrmonitor.config.DefaultAnrConfig;
 
 public class TestApplication extends Application {
     private final String TAG = TestApplication.class.getSimpleName();
@@ -24,8 +26,7 @@ public class TestApplication extends Application {
         }
         if (processName.equals(getPackageName())) {
             Log.d(TAG, "init BlockMonitor");
-            new AnrMonitor.Config(this).build().start();
+            AnrMonitor.install(this, new DefaultAnrConfig()).start();
         }
-
     }
 }

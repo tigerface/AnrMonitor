@@ -52,12 +52,14 @@ public class PendingMessageCollector {
         List<BoxMessage> messageList = new ArrayList<>();
         Pattern compile = Pattern.compile(regex);
         Matcher matcher = compile.matcher(result);
+        int id = 0;
         while (matcher.find()) {
             String group = matcher.group();
             if (!group.contains("when=")) {
                 continue;
             }
             BoxMessage message = new BoxMessage();
+            message.setId(id++);
             message.setType(MessageType.PENDING);
             message.setWhen(group);
             messageList.add(message);

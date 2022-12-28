@@ -3,7 +3,7 @@ package com.tigerface.perf.anrmonitor.interceptors;
 import android.util.Log;
 import android.view.Choreographer;
 
-import com.tigerface.perf.anrmonitor.AnrMonitor;
+import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.MessageSaver;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.entity.MessageType;
@@ -15,7 +15,7 @@ public class JankInterceptor extends Interceptor {
     private final float mFrameIntervalNanos = ReflectUtils.reflectLongField(Choreographer.getInstance(), Choreographer.class, "mFrameIntervalNanos", 16000000) * 0.000001f;
 
     @Override
-    public boolean accept(BoxMessage lastMessage, BoxMessage currentMessage, AnrMonitor.Config config) {
+    public boolean accept(BoxMessage lastMessage, BoxMessage currentMessage, AnrConfig config) {
         if (BoxMessageUtils.isBoxMessageDoFrame(currentMessage) && (currentMessage.getWallTime() >
                 mFrameIntervalNanos * config.getJankFrames())) {
             currentMessage.setType(MessageType.JANK);
@@ -25,7 +25,7 @@ public class JankInterceptor extends Interceptor {
     }
 
     @Override
-    public boolean deal(BoxMessage message, AnrMonitor.Config config, MessageSaver messageSaver) {
+    public boolean deal(BoxMessage message, AnrConfig config, MessageSaver messageSaver) {
         if (config.getCustomListener() != null) {
             config.getCustomListener().onJank(message);
         }

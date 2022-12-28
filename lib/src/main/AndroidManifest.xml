@@ -8,10 +8,6 @@
 
     <application>
         <activity
-            android:name=".ui.analyze.AnalyzeActivity"
-            android:exported="false"
-            android:label="@string/log_analyze"/>
-        <activity
             android:name=".ui.DisplayActivity"
             android:enabled="true"
             android:icon="@drawable/icon_block"
@@ -23,6 +19,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name="com.tigerface.perf.anrmonitor.AnrLogReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.tigerface.collectSamplerLog" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
