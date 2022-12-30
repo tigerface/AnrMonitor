@@ -24,9 +24,25 @@
 * 最后，收集未处理的Pending消息，此类消息类型为PENDING.
 
 ## 初始化AnrMonitor
+Step 1. Add the JitPack repository to your build file
+
+Add it in your root build.gradle at the end of repositories:
 ```
-AnrMonitor.install(this, new DefaultAnrConfig()).start();
+allprojects {
+  repositories {
+    ...
+    maven { url 'https://jitpack.io' }
+  }
+}
 ```
+	
+Step 2. Add the dependency
+```
+dependencies {
+  implementation 'com.github.tigerface:AnrMonitor:v1.0.1'
+}
+```  
+	
 查看logcat中是否产生ANR日志，保存路径如下：
 
 ```
