@@ -49,6 +49,9 @@ Step 3. init AnrMonitor
  	   .setDebuggable(true)
 	   .start();
  ```
+
+## 查看ANR日志
+
 	
 查看logcat中是否产生ANR日志，保存路径如下：
 
@@ -59,7 +62,6 @@ Step 3. init AnrMonitor
 12-28 13:12:11.826 E 8468     8825     ANR_FileCache:      cacheData success 
 
 ```
-## 查看ANR日志
 
 在Test工程下提供了一个Html可以简单查看消息队列。可以在电脑端打开并加载
 \AnrMonitor\Test\src\main\assets\index.html
