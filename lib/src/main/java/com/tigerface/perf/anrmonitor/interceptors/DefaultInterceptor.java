@@ -1,11 +1,10 @@
 package com.tigerface.perf.anrmonitor.interceptors;
 
-import android.util.Log;
-
-import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.MessageSaver;
+import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.entity.MessageType;
+import com.tigerface.perf.anrmonitor.utils.LogUtil;
 
 import java.util.ArrayList;
 
@@ -45,7 +44,7 @@ public class DefaultInterceptor extends Interceptor {
         }
         lastMessage.setCpuTime(lastMessage.getCpuTime() + message.getCpuTime());
         lastMessage.setWallTime(lastMessage.getWallTime() + message.getWallTime());
-        Log.i(TAG, lastMessage.getId() + " lastMessage.getMsgList().size: " + lastMessage.getMsgList().size() + " wall time " + lastMessage.getWallTime() + " cpu " + lastMessage.getCpuTime());
+        LogUtil.i(TAG, lastMessage.getId() + " lastMessage.getMsgList().size: " + lastMessage.getMsgList().size() + " wall time " + lastMessage.getWallTime() + " cpu " + lastMessage.getCpuTime());
         lastMessage.getMsgList().add(message);
         return true;
     }

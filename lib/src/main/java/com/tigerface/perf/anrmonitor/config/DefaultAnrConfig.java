@@ -1,6 +1,5 @@
 package com.tigerface.perf.anrmonitor.config;
 
-import com.tigerface.perf.anrmonitor.Constants;
 import com.tigerface.perf.anrmonitor.ICustomListener;
 import com.tigerface.perf.anrmonitor.collectors.Collector;
 import com.tigerface.perf.anrmonitor.collectors.CpuCollector;

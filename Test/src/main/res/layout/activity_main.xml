@@ -69,6 +69,16 @@
             android:gravity="center"
             android:text="其它进程ANR,当前SignalCatcher会不会收到SIGQUIT信号"
             android:textSize="@dimen/sp_18" />
+
+        <TextView
+            android:id="@+id/startOrstop"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_60"
+            android:layout_marginTop="@dimen/dp_10"
+            android:background="#675"
+            android:gravity="center"
+            android:text="start|stop"
+            android:textSize="@dimen/sp_18" />
     </LinearLayout>
 
     <TextView

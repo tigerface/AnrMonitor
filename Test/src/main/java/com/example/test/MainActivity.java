@@ -7,12 +7,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.hjq.permissions.OnPermissionCallback;
 import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
+import com.tigerface.perf.anrmonitor.AnrMonitor;
 
 import java.util.List;
 
@@ -21,24 +21,7 @@ public class MainActivity extends Activity {
     private JankView jankView;
     AnrTestBroadcast anrTestBroadcast;
     Handler mainHandler = new Handler(Looper.getMainLooper());
-
-    Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-            TextView textView = findViewById(R.id.tv_text);
-            textView.setText("我是：  " + num++);
-//            textView.postDelayed(this,2500);
-
-            int i = 1;
-            while (i < 500_000_000) {
-                i++;
-            }
-            textView.postDelayed(this, 16);
-        }
-    };
-
-    int num = 0;
-
+    boolean isStart = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,15 +47,6 @@ public class MainActivity extends Activity {
                         }
                     }
                 });
-
-//        findViewById(R.id.tv_text).postDelayed(runnable,2500);
-//        findViewById(R.id.tv_text).postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                consumeCpu();
-//            }
-//        },3*5000);
-
         anrTestBroadcast = AnrTestBroadcast.register(this);
         jankView = findViewById(R.id.jankView);
         findViewById(R.id.tvTestJank).setOnClickListener(new View.OnClickListener() {
@@ -110,6 +84,19 @@ public class MainActivity extends Activity {
                 startActivity(intent);
             }
         });
+
+        findViewById(R.id.startOrstop).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isStart) {
+                    AnrMonitor.get().stop();
+                } else {
+                    AnrMonitor.get().start();
+                }
+                isStart = !isStart;
+
+            }
+        });
     }
 
     @Override
@@ -118,23 +105,8 @@ public class MainActivity extends Activity {
         unregisterReceiver(anrTestBroadcast);
     }
 
-    private void consumeCpu() {
-        int i = 1;
-        while (i < 50) {
-            int j = 1;
-            while (j < 500_000_000) {
-                j++;
-            }
-            i++;
-        }
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-//        consumeCpu();
     }
-
-    Object object = new Object();
-
 }

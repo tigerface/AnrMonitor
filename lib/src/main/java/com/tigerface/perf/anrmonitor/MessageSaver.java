@@ -6,6 +6,11 @@ import com.tigerface.perf.anrmonitor.entity.MessageType;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 消息存储器
+ *
+ * @author lihu
+ */
 public class MessageSaver {
     private final int MAX_SIZE = 100;
     private List<BoxMessage> messageList = new ArrayList<>();

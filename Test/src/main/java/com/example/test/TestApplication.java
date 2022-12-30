@@ -26,7 +26,7 @@ public class TestApplication extends Application {
         }
         if (processName.equals(getPackageName())) {
             Log.d(TAG, "init BlockMonitor");
-            AnrMonitor.install(this, new DefaultAnrConfig()).start();
+            AnrMonitor.install(this, new DefaultAnrConfig()).setDebuggable(true).start();
         }
     }
 }

@@ -2,11 +2,14 @@ package com.tigerface.perf.anrmonitor.interceptors;
 
 import android.util.Log;
 
-import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.MessageSaver;
+import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.entity.MessageType;
 
+/**
+ * @author lihu
+ */
 public class TimeoutWarnInterceptor extends Interceptor {
     private static final String TAG = "ANR_" + TimeoutWarnInterceptor.class.getSimpleName();
 

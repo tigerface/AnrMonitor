@@ -6,6 +6,9 @@ import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.entity.MessageType;
 import com.tigerface.perf.anrmonitor.utils.BoxMessageUtils;
 
+/**
+ * @author lihu
+ */
 public class AmsInterceptor extends Interceptor {
     private static final String TAG = "ANR_AMS";
 

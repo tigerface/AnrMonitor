@@ -13,10 +13,14 @@ import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.config.DefaultAnrConfig;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.utils.BoxMessageUtils;
+import com.tigerface.perf.anrmonitor.utils.LogUtil;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * @author lihu
+ */
 public class AnrMonitor implements Printer, ISystemAnrObserver {
     private static final String TAG = "ANR_MONITOR";
     private static AnrMonitor sInstance;
@@ -34,6 +38,8 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
     private Handler mCheckTimeHandler;
 
     private boolean mInit = false;
+
+    private boolean debuggable;
 
     private AnrMonitor() {
         SystemAnrMonitor.init(AnrMonitor.this);
@@ -81,10 +87,11 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
         startSampleThread();
         //TODO
         sendCheckTimeMessage();
+        LogUtil.i(TAG, "start()");
     }
 
     /**
-     * 发送哨兵消息
+     * 发送CheckTime消息
      * 哨兵处理的时间差值越大说明调度能力越差，只发送20秒哨兵消息消息。
      */
     private void sendCheckTimeMessage() {
@@ -212,16 +219,19 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
 
     @Override
     public void onSystemAnr() {
-        Log.e(TAG, "onSystemAnr happen");
+        Log.e(TAG, "onSystemAnr happen," + mInit);
+        if (!mInit) {
+            return;
+        }
         Dispatcher.getInstance().collectANRData(mContext);
         if (mConfig.getCustomListener() != null) {
-            mConfig.getCustomListener().onTimeOutWarn(mCurrentMessage);
+            mConfig.getCustomListener().onAnr(mCurrentMessage);
         }
     }
 
     public void stop() {
+        LogUtil.i(TAG, "stop()");
         mInit = false;
-        mCurrentMessage = null;
         if (mSampleThread != null) {
             mSampleThread.quit();
         }
@@ -234,6 +244,15 @@ public class AnrMonitor implements Printer, ISystemAnrObserver {
         if (mCheckTimeHandler != null) {
             mCheckTimeHandler.removeCallbacks(null);
         }
+    }
+
+    public boolean isDebuggable() {
+        return debuggable;
+    }
+
+    public AnrMonitor setDebuggable(boolean debuggable) {
+        this.debuggable = debuggable;
+        return this;
     }
 
 }

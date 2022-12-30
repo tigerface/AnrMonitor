@@ -10,11 +10,11 @@ import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.entity.MessageType;
 import com.tigerface.perf.anrmonitor.interceptors.AmsInterceptor;
-import com.tigerface.perf.anrmonitor.interceptors.TimeoutWarnInterceptor;
+import com.tigerface.perf.anrmonitor.interceptors.DefaultInterceptor;
 import com.tigerface.perf.anrmonitor.interceptors.GapInterceptor;
 import com.tigerface.perf.anrmonitor.interceptors.Interceptor;
 import com.tigerface.perf.anrmonitor.interceptors.JankInterceptor;
-import com.tigerface.perf.anrmonitor.interceptors.DefaultInterceptor;
+import com.tigerface.perf.anrmonitor.interceptors.TimeoutWarnInterceptor;
 import com.tigerface.perf.anrmonitor.utils.AppExecutors;
 import com.tigerface.perf.anrmonitor.utils.FileUtil;
 
@@ -24,6 +24,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * @author lihu
+ */
 public class Dispatcher {
     private static final String TAG = "ANR_DISPATCHER";
     private static volatile Dispatcher mInstance;
@@ -136,20 +139,4 @@ public class Dispatcher {
         }
         Log.i(TAG, "collect anr system information end.");
     }
-
-    /**
-     * 检测是否保存了采样数据
-     *
-     * @param context
-     * @param configs
-     * @param message
-     * @param configs
-     */
-//    private void reCollectSampleData(Context context, BoxMessage message, AnrConfig configs) {
-//        boolean existSampleFile = FileUtil.getInstance(context).existSampleFile();
-//        if (!existSampleFile) {
-//            Log.i(TAG, "recollect anr system information");
-//            collectSampleData(context, message, configs);
-//        }
-//    }
 }

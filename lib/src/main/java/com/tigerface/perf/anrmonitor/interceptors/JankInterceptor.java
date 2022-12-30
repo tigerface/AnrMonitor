@@ -3,13 +3,16 @@ package com.tigerface.perf.anrmonitor.interceptors;
 import android.util.Log;
 import android.view.Choreographer;
 
-import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.MessageSaver;
+import com.tigerface.perf.anrmonitor.config.AnrConfig;
 import com.tigerface.perf.anrmonitor.entity.BoxMessage;
 import com.tigerface.perf.anrmonitor.entity.MessageType;
 import com.tigerface.perf.anrmonitor.utils.BoxMessageUtils;
 import com.tigerface.perf.anrmonitor.utils.ReflectUtils;
 
+/**
+ * @author lihu
+ */
 public class JankInterceptor extends Interceptor {
     private static final String TAG = "ANR_JANK";
     private final float mFrameIntervalNanos = ReflectUtils.reflectLongField(Choreographer.getInstance(), Choreographer.class, "mFrameIntervalNanos", 16000000) * 0.000001f;

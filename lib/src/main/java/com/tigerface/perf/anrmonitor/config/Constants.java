@@ -1,4 +1,4 @@
-package com.tigerface.perf.anrmonitor;
+package com.tigerface.perf.anrmonitor.config;
 
 public interface Constants {
     long SOLID_INTERVAL = 1000;//定时发送哨兵消息，以查看系统分发情况
