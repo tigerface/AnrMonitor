@@ -41,7 +41,14 @@ Step 2. Add the dependency
 dependencies {
   implementation 'com.github.tigerface:AnrMonitor:v1.0.1'
 }
-```  
+```
+Step 3. init AnrMonitor
+
+```
+ AnrMonitor.install(this, new DefaultAnrConfig())
+ 	   .setDebuggable(true)
+	   .start();
+ ```
 	
 查看logcat中是否产生ANR日志，保存路径如下：
 
@@ -68,7 +75,3 @@ dependencies {
 * 消息队列数据保存到SD卡中，目前使用简单的html显示时间线，有需要的可自行开发。
 * 通过 adb 发送广播的方式实时收集堆栈信息
 * 未区分Release和Debug版本。
-
-
-
-
