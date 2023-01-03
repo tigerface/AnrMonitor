@@ -8,6 +8,7 @@
 
 [今日头条 ANR 优化实践系列](https://juejin.cn/post/6942665216781975582#heading-16)
 
+<img src="https://github.com/tigerface/AnrMonitor/blob/main/picture/ANR_T.jpg"  style="width:600px" />
 
 参考仓库，并对代码做了重构
 [月光宝盒](https://github.com/xiaolutang/MoonlightTreasureBox)
